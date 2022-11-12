@@ -35,12 +35,12 @@ function postRadius(R) {
 
 // particle function to update home lat on device 
 function postlat(lat) {
-  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setPosLat', argument: lat.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
+  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setFixedLat', argument: lat.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
 }
 
 // particle function to update home lng on device 
 function postLng(lng) {
-  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setPosLong', argument: lng.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
+  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setFixedLong', argument: lng.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
 }
 
 function Map() {
