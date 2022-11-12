@@ -16,7 +16,7 @@ import './index.css'
 
 export default function App() {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: 'AIzaSyA4Yo0wvOoKMzofaD6jYq0gqnb6REre3M0',
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ["places"],
   });
 
@@ -30,17 +30,17 @@ var particle = new Particle();
 
 // particle function to update radius on device 
 function postRadius(R) {
-  particle.callFunction({ deviceId: 'e00fce68f0050383aaaccc4e', name: 'setRadius', argument: R, auth: '00ad60b7d1b3f3613bcfcc53ab48eb1d10ef617d' });
+  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setRadius', argument: R, auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
 }
 
 // particle function to update home lat on device 
 function postlat(lat) {
-  particle.callFunction({ deviceId: 'e00fce68f0050383aaaccc4e', name: 'setPosLat', argument: lat.toString(), auth: '00ad60b7d1b3f3613bcfcc53ab48eb1d10ef617d' });
+  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setPosLat', argument: lat.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
 }
 
 // particle function to update home lng on device 
 function postLng(lng) {
-  particle.callFunction({ deviceId: 'e00fce68f0050383aaaccc4e', name: 'setPosLong', argument: lng.toString(), auth: '00ad60b7d1b3f3613bcfcc53ab48eb1d10ef617d' });
+  particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setPosLong', argument: lng.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
 }
 
 function Map() {
@@ -50,7 +50,7 @@ function Map() {
 
   useEffect(() => {
     const loop = setInterval(async () => {
-        const fetchLat = await fetch('https://api.particle.io/v1/devices/e00fce68f0050383aaaccc4e/lat?access_token=00ad60b7d1b3f3613bcfcc53ab48eb1d10ef617d');
+        const fetchLat = await fetch(`https://api.particle.io/v1/devices/${process.env.REACT_APP_PARTICLE_DEVICE_ID}/lat?access_token=${process.env.REACT_APP_PARTICLE_ACCESS_TOKEN}`);
         const latData = await fetchLat.json();
         console.log(latData.result)
         setMarker(marker =>({
@@ -58,14 +58,14 @@ function Map() {
           lat: latData.result
         }))
 
-        const fetchLng = await fetch('https://api.particle.io/v1/devices/e00fce68f0050383aaaccc4e/long?access_token=00ad60b7d1b3f3613bcfcc53ab48eb1d10ef617d');
+        const fetchLng = await fetch(`https://api.particle.io/v1/devices/${process.env.REACT_APP_PARTICLE_DEVICE_ID}/long?access_token=${process.env.REACT_APP_PARTICLE_ACCESS_TOKEN}`);
         const lngData = await fetchLng.json();
         console.log(lngData.result)
         setMarker(marker => ({
           ...marker,
           lng: lngData.result
         }))
-    }, 3000);
+    }, 1000);
 
     return () => clearInterval(loop);
   }, [marker]);
