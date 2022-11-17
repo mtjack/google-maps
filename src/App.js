@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { GoogleMap, useLoadScript, Marker, Circle } from "@react-google-maps/api";
 import usePlacesAutocomplete, {
   getGeocode,
@@ -14,14 +14,57 @@ import {
 import "@reach/combobox/styles.css";
 import './index.css'
 
+import firebase from 'firebase/compat/app'; 
+import 'firebase/compat/firestore';
+import 'firebase/compat/auth';
+
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+
+firebase.initializeApp({
+  apiKey: "AIzaSyCtiM6tgtSXZt4L5X53muekzA8wxj5yY6M",
+  authDomain: "particle-assistive-monitor.firebaseapp.com",
+  projectId: "particle-assistive-monitor",
+  storageBucket: "particle-assistive-monitor.appspot.com",
+  messagingSenderId: "875781651531",
+  appId: "1:875781651531:web:14c1a63930d05cb4d661ce",
+  measurementId: "G-9LPV8ZT23V"
+});
+
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+
+function SignIn() {
+  const signInWithGoogle = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
+  }
+
+  return (
+    <button onClick={signInWithGoogle}>Sign In</button>
+  )
+}
+
+function SingOut() {
+  return auth.currentUser && (
+    <button onClick={() => auth.signOut()}>Sign Out</button>
+  )
+}
+
 export default function App() {
+  const [user] = useAuthState(auth);
+
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ["places"],
   });
 
   if (!isLoaded) return <div>Loading...</div>;
-  return <Map />;
+  return (
+    <div>
+      {user ? <Map /> : <SignIn />}
+    </div>
+  );
 }
 
 var Particle = require('particle-api-js');
@@ -72,6 +115,7 @@ function Map() {
 
   return (
     <>
+      <SingOut />
       <div className="places-container">
         <PlacesAutocomplete setSelected={setSelected} />
       </div>
