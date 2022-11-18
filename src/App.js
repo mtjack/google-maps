@@ -19,7 +19,7 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+//import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 firebase.initializeApp({
   apiKey: "AIzaSyCtiM6tgtSXZt4L5X53muekzA8wxj5yY6M",
@@ -58,6 +58,20 @@ export default function App() {
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ["places"],
   });
+
+  const messaging = firebase.messaging();
+
+  messaging
+    .requestPermission()
+    .then(() => {
+      return messaging.getToken();
+    })
+    .then(token => {
+      console.log("token...", token);
+    })
+    .catch(error => {
+      console.log(error)
+    })
 
   if (!isLoaded) return <div>Loading...</div>;
   return (
