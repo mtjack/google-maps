@@ -19,6 +19,8 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 import 'firebase/compat/messaging';
 
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import toast, { Toaster } from 'react-hot-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
 //import { useCollectionData } from 'react-firebase-hooks/firestore';
 
@@ -34,6 +36,61 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const firestore = firebase.firestore();
+const messaging = getMessaging();
+
+const requestForToken = () => {
+  return getToken(messaging, { vapidKey: process.env.REACT_APP_VAPID_KEY })
+    .then((currentToken) => {
+      if (currentToken) {
+        console.log('current token for client: ', currentToken);
+        // Perform any other neccessary action with the token
+      } else {
+        // Show permission request UI
+        console.log('No registration token available. Request permission to generate one.');
+      }
+    })
+    .catch((err) => {
+      console.log('An error occurred while retrieving token. ', err);
+    });
+};
+
+const Notification = () => {
+  const [notification, setNotification] = useState({title: '', body: ''});
+  const notify = () =>  toast(<ToastDisplay/>); 
+  function ToastDisplay() {
+    return (
+      <div>
+        <p><b>{notification?.title}</b></p>
+        <p>{notification?.body}</p>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (notification?.title ){
+     notify()
+    }
+  }, [notification])
+
+  requestForToken();
+
+  onMessageListener()
+    .then((payload) => {
+      setNotification({title: payload?.notification?.title, body: payload?.notification?.body});     
+    })
+    .catch((err) => console.log('failed: ', err));
+
+  return (
+     <Toaster/>
+  )
+}
+
+const onMessageListener = () =>
+  new Promise((resolve) => {    
+    onMessage(messaging, (payload) => {
+      resolve(payload);
+    });
+  });
 
 function SignIn() {
   const signInWithGoogle = () => {
@@ -60,24 +117,12 @@ export default function App() {
     libraries: ["places"],
   });
 
-  const messaging = firebase.messaging();
-
-  messaging
-    .requestPermission()
-    .then(() => {
-      return messaging.getToken();
-    })
-    .then(token => {
-      console.log("token...", token);
-    })
-    .catch(error => {
-      console.log(error)
-    })
 
   if (!isLoaded) return <div>Loading...</div>;
   return (
     <div>
       {user ? <Map /> : <SignIn />}
+      <Notification />
     </div>
   );
 }
