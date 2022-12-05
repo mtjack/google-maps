@@ -1,28 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
-import { GoogleMap, useLoadScript, Marker, Circle } from "@react-google-maps/api";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxPopover,
-  ComboboxList,
-  ComboboxOption,
-} from "@reach/combobox";
-import "@reach/combobox/styles.css";
 import './index.css'
+
+import { GoogleMap, useLoadScript, Marker, Circle } from "@react-google-maps/api";
+import usePlacesAutocomplete, { getGeocode, getLatLng, } from "use-places-autocomplete";
+
+import { Combobox, ComboboxInput, ComboboxPopover, ComboboxList, ComboboxOption, } from "@reach/combobox";
+import "@reach/combobox/styles.css";
 
 import firebase from 'firebase/compat/app'; 
 import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 import 'firebase/compat/messaging';
-
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import toast, { Toaster } from 'react-hot-toast';
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { useAuthState } from 'react-firebase-hooks/auth';
 //import { useCollectionData } from 'react-firebase-hooks/firestore';
+
+import toast, { Toaster } from 'react-hot-toast';
 
 firebase.initializeApp({
   apiKey: "AIzaSyCtiM6tgtSXZt4L5X53muekzA8wxj5yY6M",
@@ -38,22 +32,79 @@ const auth = firebase.auth();
 const firestore = firebase.firestore();
 const messaging = getMessaging();
 
-const requestForToken = () => {
-  return getToken(messaging, { vapidKey: process.env.REACT_APP_VAPID_KEY })
-    .then((currentToken) => {
-      if (currentToken) {
-        console.log('current token for client: ', currentToken);
-        // Perform any other neccessary action with the token
-      } else {
-        // Show permission request UI
-        console.log('No registration token available. Request permission to generate one.');
-      }
-    })
-    .catch((err) => {
-      console.log('An error occurred while retrieving token. ', err);
-    });
+const db = getFirestore();
+
+
+export default function App() {
+  const [user] = useAuthState(auth);
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
+  });
+
+
+  if (!isLoaded) return <div>Loading...</div>;
+  return (
+    <div>
+      {user ? <div ><Map /> <Notification /> </div> : <SignIn />}
+    </div>
+  );
+}
+
+// Sign in btn
+function SignIn() {
+  const signInWithGoogle = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
+  }
+
+  return (
+    <button onClick={signInWithGoogle}>Sign In</button>
+  )
+}
+
+// Sign out button
+function SingOut() {
+  return auth.currentUser && (
+    <button onClick={() => auth.signOut()}>Sign Out</button>
+  )
+}
+
+// Get notification permision from user
+const requestForToken = async () => {
+  try {
+    const currentToken = await getToken(messaging, { vapidKey: process.env.REACT_APP_VAPID_KEY });
+    if (currentToken) {
+      console.log('current token for client: ', currentToken);
+      const { uid } = auth.currentUser
+      const target = doc(db, "users", uid)
+      const fmc = {fmcToken: currentToken}
+      updateDoc(target, fmc)
+      .then(docRef => {
+        console.log("fmc field added to user");
+      })
+      .catch(error => {
+        console.log(error);
+      })
+    } else {
+      // Show permission request UI
+      console.log('No registration token available. Request permission to generate one.');
+    }
+  } catch (err) {
+    console.log('An error occurred while retrieving token. ', err);
+  }
 };
 
+// Listen for new notifications
+const onMessageListener = () =>
+  new Promise((resolve) => {    
+    onMessage(messaging, (payload) => {
+      resolve(payload);
+    });
+  });
+
+// Notification component 
 const Notification = () => {
   const [notification, setNotification] = useState({title: '', body: ''});
   const notify = () =>  toast(<ToastDisplay/>); 
@@ -85,48 +136,6 @@ const Notification = () => {
   )
 }
 
-const onMessageListener = () =>
-  new Promise((resolve) => {    
-    onMessage(messaging, (payload) => {
-      resolve(payload);
-    });
-  });
-
-function SignIn() {
-  const signInWithGoogle = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-  }
-
-  return (
-    <button onClick={signInWithGoogle}>Sign In</button>
-  )
-}
-
-function SingOut() {
-  return auth.currentUser && (
-    <button onClick={() => auth.signOut()}>Sign Out</button>
-  )
-}
-
-export default function App() {
-  const [user] = useAuthState(auth);
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: ["places"],
-  });
-
-
-  if (!isLoaded) return <div>Loading...</div>;
-  return (
-    <div>
-      {user ? <Map /> : <SignIn />}
-      <Notification />
-    </div>
-  );
-}
-
 var Particle = require('particle-api-js');
 var particle = new Particle();
 
@@ -146,6 +155,7 @@ function postLng(lng) {
   particle.callFunction({ deviceId: process.env.REACT_APP_PARTICLE_DEVICE_ID, name: 'setFixedLong', argument: lng.toString(), auth: process.env.REACT_APP_PARTICLE_ACCESS_TOKEN });
 }
 
+// Google maps component 
 function Map() {
   const [selected, setSelected] = useState(null);
   const [radius, setRadius] = useState(30); 
@@ -209,6 +219,7 @@ function Map() {
   );
 }
 
+// Google maps search box component 
 const PlacesAutocomplete = ({ setSelected }) => {
   const {
     ready,
