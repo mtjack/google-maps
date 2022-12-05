@@ -14,7 +14,6 @@ import 'firebase/compat/messaging';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { useAuthState } from 'react-firebase-hooks/auth';
-//import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -47,7 +46,7 @@ export default function App() {
   if (!isLoaded) return <div>Loading...</div>;
   return (
     <div>
-      {user ? <div ><Map /> <Notification /> </div> : <SignIn />}
+      {user ? <div ><Map /> <Notification /> </div> : <div className="sign-in-body"><SignIn /></div>}
     </div>
   );
 }
@@ -60,7 +59,7 @@ function SignIn() {
   }
 
   return (
-    <button onClick={signInWithGoogle}>Sign In</button>
+    <button onClick={signInWithGoogle} className="sign-in">Sign In</button>
   )
 }
 
@@ -190,7 +189,17 @@ function Map() {
         <PlacesAutocomplete setSelected={setSelected} />
       </div>
 
-      <div>
+      <GoogleMap
+        zoom={10}
+        center={selected}
+        mapContainerClassName="map-container"
+        options={{streetViewControl: false}}
+      >
+        {selected && <Circle center={selected} radius={radius} /> }
+        <Marker position={marker} />
+      </GoogleMap>
+
+      <div className="slider">
         <input type="range" min="10" max="100" step={10} value={radius} list="ranges" onChange={(e) => setRadius(Number(e.target.value)) & postRadius(e.target.value)}/>
         <datalist id="ranges">
           <option value={10}></option>
@@ -205,16 +214,6 @@ function Map() {
           <option value={100}></option>
         </datalist>
       </div>
-
-      <GoogleMap
-        zoom={10}
-        center={selected}
-        mapContainerClassName="map-container"
-        options={{streetViewControl: false}}
-      >
-        {selected && <Circle center={selected} radius={radius} /> }
-        <Marker position={marker} />
-      </GoogleMap>
     </>
   );
 }

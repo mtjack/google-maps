@@ -28,11 +28,33 @@ datalist {
 
 .map-container {
   width: 95%;
-  height: 75vh;
+  height: 90vh;
   margin: 0 auto;
 }
 
 .combobox-input {
   width: 100%;
   padding: 0.5rem;
+}
+
+.sign-in-body {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign-in {
+  width: 250px;
+  height: 60px;
+  border-radius: 10px;
+  background-color: lightgreen;
+}
+
+.slider {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  position: absolute;
 }
