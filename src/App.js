@@ -156,7 +156,7 @@ function postLng(lng) {
 
 // Google maps component 
 function Map() {
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState({lat:55.933042990333966, lng:-3.2136258156244923});
   const [radius, setRadius] = useState(30); 
   const [marker, setMarker] = useState({lat: 0, lng: 0})
 
@@ -190,7 +190,7 @@ function Map() {
       </div>
 
       <GoogleMap
-        zoom={10}
+        zoom={18}
         center={selected}
         mapContainerClassName="map-container"
         options={{streetViewControl: false}}
